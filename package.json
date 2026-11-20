@@ -1,0 +1,16 @@
+{
+  "name": "simple-2ch",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "db:apply:local": "wrangler d1 migrations apply simple-2ch-db --local",
+    "db:apply:remote": "wrangler d1 migrations apply simple-2ch-db --remote",
+    "deploy": "wrangler deploy",
+    "gen:sjis": "node scripts/gen-sjis-table.js",
+    "test": "node --test test/*.test.js"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.0"
+  }
+}

@@ -1,0 +1,11 @@
+CREATE TABLE dat_lines (
+  no INTEGER PRIMARY KEY NOT NULL,
+  line BLOB NOT NULL,
+  bytes INTEGER NOT NULL,
+  name TEXT NOT NULL,
+  mail TEXT NOT NULL,
+  date_text TEXT NOT NULL,
+  poster_id TEXT NOT NULL,
+  message TEXT NOT NULL,
+  title TEXT NOT NULL
+) STRICT;
