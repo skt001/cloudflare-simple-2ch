@@ -53,7 +53,7 @@ npx wrangler secret put ID_SEED          # ID の種。長いランダムな文�
 npx wrangler deploy
 ```
 
-Worker 名は `simple-2ch` で、デプロイ後の URL は `https://simple-2ch.<アカウントのサブドメイン>.workers.dev/` になります。デプロイ後に、[ADMIN.md](./ADMIN.md) の「初期スレッドの作成」の SQL を `--remote` で実行して初期スレッドを作成してください。
+Worker 名は `2ch` で、デプロイ後の URL は `https://2ch.<アカウントのサブドメイン>.workers.dev/` になります。デプロイ後に、[ADMIN.md](./ADMIN.md) の「初期スレッドの作成」の SQL を `--remote` で実行して初期スレッドを作成してください。
 
 更新時も、**先にマイグレーションを適用してから**デプロイしてください。
 
