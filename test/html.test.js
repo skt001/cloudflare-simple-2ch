@@ -115,7 +115,7 @@ test("レス範囲: クエリ形式の st / to / ls / nofirst(ls が優先)", as
 
 test("アンカー: 有効な範囲だけリンクにし、無効なものは文字のまま", async () => {
   const env = sampleEnv();
-  const insert = env.DB.sqlite.prepare(
+  const insert = env.simple_2ch_db.sqlite.prepare(
     "INSERT INTO posts VALUES (?, '名無しさん', '', 'd', 'i', ?, 0, 'web')"
   );
   insert.run(11, "&gt;&gt;99 &gt;&gt;0 &gt;&gt;3-2 &gt;&gt;1-5 &gt;&gt;10-99 &amp;gt;&amp;gt;1");
@@ -132,7 +132,7 @@ test("アンカー: 有効な範囲だけリンクにし、無効なものは文
 
 test("名前の色とメール: 通常は green、sage は blue、sage 以外のメールは名前を mailto でリンクする", async () => {
   const env = sampleEnv();
-  const insert = env.DB.sqlite.prepare("INSERT INTO posts VALUES (?, 'n', ?, 'd', 'i', 'm', 0, 'web')");
+  const insert = env.simple_2ch_db.sqlite.prepare("INSERT INTO posts VALUES (?, 'n', ?, 'd', 'i', 'm', 0, 'web')");
   insert.run(11, "a@example.com");
   insert.run(12, "SAGE");
   insert.run(13, "&quot;x&quot;");
@@ -144,7 +144,7 @@ test("名前の色とメール: 通常は green、sage は blue、sage 以外の
 
 test("あぼーんした行は、書き換え後の値を通常の投稿として出力する", async () => {
   const env = sampleEnv();
-  env.DB.exec("UPDATE posts SET name = 'あぼーん', mail = '', date_text = 'あぼーん', poster_id = '', message = 'あぼーん' WHERE no = 4");
+  env.simple_2ch_db.exec("UPDATE posts SET name = 'あぼーん', mail = '', date_text = 'あぼーん', poster_id = '', message = 'あぼーん' WHERE no = 4");
   const { text } = await html(env, `${readBase}/4`);
   assert.ok(text.includes("<dt>4 名前：<font color=green><b>あぼーん </b></font>投稿日：あぼーん<dd> あぼーん <br><br>"));
 });

@@ -45,7 +45,7 @@ npx wrangler login
 npx wrangler d1 create simple-2ch-db
 ```
 
-出力された `database_id` を、`wrangler.jsonc` の `d1_databases` に書いてください（`binding` は `DB`、コードがこの名前を使います）。その後、マイグレーションの適用、secret の設定、デプロイを行います。
+作成の際、Wrangler が `wrangler.jsonc` へ `d1_databases` を追記するので、提案を受け入れてください（バインディング名は DB 名から生成される `simple_2ch_db` で、コードはこの名前を使います）。すでに同名の D1 がある場合は、`npx wrangler d1 info simple-2ch-db` で ID を確認し、`wrangler.jsonc` の `d1_databases` に `binding` を `simple_2ch_db`、`database_name` と `database_id` を既存のものとして自分で書いてください。その後、マイグレーションの適用、secret の設定、デプロイを行います。
 
 ```sh
 npm run db:apply:remote

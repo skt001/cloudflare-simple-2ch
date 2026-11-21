@@ -68,10 +68,10 @@ test("GET /posts: エスケープを元に戻したプレーンテキストで�
   const anchors = await json(await apiCall(env, "/posts?from=3&to=4", { token: null }));
   assert.equal(anchors.posts[0].message, ">>1\nスレ立て乙です。");
 
-  env.DB.exec(`INSERT INTO posts VALUES (11, '&lt;名&amp;前&gt;', '&quot;m&quot;', 'd', 'i', 'a &amp;lt; &amp; &lt;b&gt;', 0, 'web')`);
+  env.simple_2ch_db.exec(`INSERT INTO posts VALUES (11, '&lt;名&amp;前&gt;', '&quot;m&quot;', 'd', 'i', 'a &amp;lt; &amp; &lt;b&gt;', 0, 'web')`);
   const { post } = await json(await apiCall(env, "/posts/11", { token: null }));
   assert.deepEqual([post.name, post.mail, post.message], ["<名&前>", '"m"', "a &lt; & <b>"]);
-  env.DB.exec("UPDATE thread SET title = 'a &amp; &lt;b&gt;' WHERE id = 1");
+  env.simple_2ch_db.exec("UPDATE thread SET title = 'a &amp; &lt;b&gt;' WHERE id = 1");
   const { thread } = await json(await apiCall(env, "/thread", { token: null }));
   assert.equal(thread.title, "a & <b>");
 });
@@ -146,7 +146,7 @@ test("GET /posts/{no}: 単一投稿。ないときは 404 POST_NOT_FOUND、不�
 
 test("あぼーんした行は、書き換え後の値をそのまま返す(id は空)", async () => {
   const env = sampleEnv();
-  env.DB.exec("UPDATE posts SET name = 'あぼーん', mail = '', date_text = 'あぼーん', poster_id = '', message = 'あぼーん' WHERE no = 4");
+  env.simple_2ch_db.exec("UPDATE posts SET name = 'あぼーん', mail = '', date_text = 'あぼーん', poster_id = '', message = 'あぼーん' WHERE no = 4");
   const { post } = await json(await apiCall(env, "/posts/4", { token: null }));
   assert.deepEqual([post.name, post.mail, post.date, post.id, post.message], ["あぼーん", "", "あぼーん", "", "あぼーん"]);
   const { thread } = await json(await apiCall(env, "/thread", { token: null }));
@@ -178,7 +178,7 @@ test("投稿系は Bearer トークンが必要: なし・不一致は 401 UNAUT
     const basic = await apiCall(env, path, { method: "POST", token: null, body: { message: "a" }, headers: { Authorization: "Basic dGVzdC10b2tlbg==" } });
     assert.equal(basic.status, 401);
   }
-  assert.equal(env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
 });
 
 test("API_POST_TOKEN が未設定なら、投稿系は 503 API_DISABLED(読み取りは使える)", async () => {
@@ -203,7 +203,7 @@ test("POST /posts/validate: 正規化後の値と残りレス数を返し、保�
       ok: true, normalized: { name: "太郎", mail: "sage", message: "本文\n2行目" }, remaining_posts: 4990,
     });
   }
-  assert.equal(env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
   const post = await apiCall(env, "/posts", { method: "POST", headers, body: { message: "x" } });
   assert.equal(post.status, 201, "validate を繰り返しても規制にならない");
 });
@@ -240,7 +240,7 @@ test("POST /posts: 201 と、保存した投稿(post)と thread。source は api
   assert.equal(body.thread.latest_post_no, 11);
   assert.equal(body.thread.post_count, 11);
 
-  const saved = env.DB.sqlite.prepare("SELECT name, mail, message, source FROM posts WHERE no = 11").get();
+  const saved = env.simple_2ch_db.sqlite.prepare("SELECT name, mail, message, source FROM posts WHERE no = 11").get();
   assert.deepEqual({ ...saved }, { name: "AI &lt;bot&gt;", mail: "a&quot;b", message: "こんにちは &amp; &lt;b&gt;\n&gt;&gt;1", source: "api" });
   const list = await json(await apiCall(env, "/posts?last=1", { token: null }));
   assert.equal(list.posts[0].message, "こんにちは & <b>\n>>1");
@@ -261,7 +261,7 @@ test("POST /posts: 制限値・正規化は HTML と同じ(同じメッセージ
     assertError(result, "INVALID_REQUEST");
     assert.equal(result.error.message, message);
   }
-  assert.equal(env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
 });
 
 test("POST /posts: JSON が不正・型が違う・Content-Type が違うときは 400 INVALID_REQUEST", async () => {
@@ -313,7 +313,7 @@ test("POST /posts: ID_SEED が未設定なら 500 INTERNAL_ERROR で保存しな
   const response = await apiCall(env, "/posts", { method: "POST", headers: ip(), body: { message: "a" } });
   assert.equal(response.status, 500);
   assertError(await json(response), "INTERNAL_ERROR");
-  assert.equal(env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
 });
 
 // ---------- 共通の制限 ----------

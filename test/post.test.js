@@ -12,11 +12,11 @@ function newEnv(overrides) {
 }
 
 function row(env, no) {
-  return env.DB.sqlite.prepare("SELECT * FROM posts WHERE no = ?").get(no);
+  return env.simple_2ch_db.sqlite.prepare("SELECT * FROM posts WHERE no = ?").get(no);
 }
 
 function count(env) {
-  return env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n;
+  return env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n;
 }
 
 async function errorOf(response) {
@@ -287,7 +287,7 @@ test("レス数の上限: MAX_POSTS(5000)件までは受理し、超えると 40
   assert.equal(over.status, 409);
   assert.equal(await errorOf(over), "レス数の上限に達したため書き込めません");
   assert.equal(count(env), 5000);
-  assert.equal(env.DB.sqlite.prepare("SELECT MAX(no) AS m FROM posts").get().m, 5000);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT MAX(no) AS m FROM posts").get().m, 5000);
 });
 
 test("ID_SEED が未設定のときは投稿を 500 で拒否し、保存しない(閲覧は影響を受けない)", async () => {

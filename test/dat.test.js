@@ -354,7 +354,7 @@ const ABON = "UPDATE posts SET name = 'あぼーん', mail = '', date_text = '�
 test("JD: 手元より前の行をあぼーんすると、続きの先頭が改行でなくなり(または 416)、取り直しで検出できる", async () => {
   const env = sampleEnv();
   const local = prefixThroughLine(await bytesOf(await call(env, DAT_PATH)), 9);
-  env.DB.exec(ABON + "4");
+  env.simple_2ch_db.exec(ABON + "4");
   const result = await jdUpdate(env, local);
   assert.ok(result.status === 416 || result.local === null, `status=${result.status}`);
 
@@ -367,7 +367,7 @@ test("JD: 手元より後ろの行をあぼーんしても、手元の位置か�
   const env = sampleEnv();
   const full = await bytesOf(await call(env, DAT_PATH));
   const local = prefixThroughLine(full, 9);
-  env.DB.exec(ABON + "10");
+  env.simple_2ch_db.exec(ABON + "10");
   const result = await jdUpdate(env, local);
   assert.equal(result.status, 206);
   assert.ok(result.local !== null);
@@ -376,7 +376,7 @@ test("JD: 手元より後ろの行をあぼーんしても、手元の位置か�
 
 test("あぼーん後: 全件取得・範囲取得には書き換え後の値が出て、差分取得(N が対象以降)には出ない", async () => {
   const env = sampleEnv();
-  env.DB.exec(ABON + "4");
+  env.simple_2ch_db.exec(ABON + "4");
   const abon = "あぼーん<><>あぼーん<> あぼーん <>\n";
 
   const full = await text(await call(env, `${readBase}/?raw=0.0`));
@@ -446,7 +446,7 @@ test("subject: HEAD は GET と同じステータス・ヘッダーで本文な�
 // ---------- dat_lines ----------
 
 function lineCount(env) {
-  return env.DB.sqlite.prepare("SELECT COUNT(*) AS n FROM dat_lines").get().n;
+  return env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM dat_lines").get().n;
 }
 
 test("dat_lines: 初回の dat 取得で行が生成され、2 回目は同じバイト列が返る", async () => {
@@ -463,10 +463,10 @@ test("dat_lines: あぼーん(ADMIN の UPDATE のみ)が、キャッシュ操�
   const env = sampleEnv();
   await call(env, DAT_PATH);
   assert.equal(lineCount(env), 10);
-  env.DB.exec(ABON + "5");
+  env.simple_2ch_db.exec(ABON + "5");
   const dat = await text(await call(env, DAT_PATH));
   assert.ok(dat.includes("あぼーん<><>あぼーん<> あぼーん <>\n"));
-  const row = env.DB.sqlite.prepare("SELECT name, message FROM dat_lines WHERE no = 5").get();
+  const row = env.simple_2ch_db.sqlite.prepare("SELECT name, message FROM dat_lines WHERE no = 5").get();
   assert.deepEqual([row.name, row.message], ["あぼーん", "あぼーん"]);
 });
 
@@ -484,7 +484,7 @@ test("dat_lines: 投稿が増えると、次回の dat 取得で新しい行が�
 test("dat_lines: スレッドタイトルを SQL で変えると、1 行目が作り直される", async () => {
   const env = sampleEnv();
   await call(env, DAT_PATH);
-  env.DB.exec("UPDATE thread SET title = '新しいタイトル' WHERE id = 1");
+  env.simple_2ch_db.exec("UPDATE thread SET title = '新しいタイトル' WHERE id = 1");
   const dat = await text(await call(env, DAT_PATH));
   assert.ok(dat.split("\n")[0].endsWith("<>新しいタイトル"));
 });

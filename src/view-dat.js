@@ -115,7 +115,7 @@ function partialRange(last, { st, to, ls }) {
 
 export async function handleRaw(request, env, params, now = Date.now()) {
   if (params.bbs !== BBS || params.key !== KEY) return errResponse(MESSAGES.noThread);
-  const thread = await getThread(env.DB);
+  const thread = await getThread(env.simple_2ch_db);
   if (!thread) return errResponse(MESSAGES.noThread);
   if (isNotModified(request, thread, now)) return notModifiedResponse(thread);
 
@@ -128,13 +128,13 @@ export async function handleRaw(request, env, params, now = Date.now()) {
   let body;
   if (n === 0 && (range.st > 0 || range.to > 0 || range.ls > 0)) {
     const { first, last: end } = partialRange(last, range);
-    body = await datRangeBytes(env.DB, thread.title, first, end);
+    body = await datRangeBytes(env.simple_2ch_db, thread.title, first, end);
     status = (size) => `+PARTIAL ${size}/${maxText}\tRes:${first}-${end}/${last}`;
   } else if (n === 0) {
-    body = await datRangeBytes(env.DB, thread.title, 1, last);
+    body = await datRangeBytes(env.simple_2ch_db, thread.title, 1, last);
     status = (size) => `+OK ${size}/${maxText}`;
   } else if (n <= last) {
-    body = await datRangeBytes(env.DB, thread.title, n + 1, last);
+    body = await datRangeBytes(env.simple_2ch_db, thread.title, n + 1, last);
     status = (size) => `+OK ${size}/${maxText}`;
   } else {
     return errResponse(SYNC_ERROR);
@@ -145,11 +145,11 @@ export async function handleRaw(request, env, params, now = Date.now()) {
 
 export async function handleDat(request, env, params, now = Date.now()) {
   if (params.bbs !== BBS || params.key !== KEY) return notFound();
-  const thread = await getThread(env.DB);
+  const thread = await getThread(env.simple_2ch_db);
   if (!thread) return notFound();
   if (isNotModified(request, thread, now)) return notModifiedResponse(thread);
 
-  const bytes = await datRangeBytes(env.DB, thread.title, 1, thread.lastNo);
+  const bytes = await datRangeBytes(env.simple_2ch_db, thread.title, 1, thread.lastNo);
   const total = bytes.length;
   const common = { "Accept-Ranges": "bytes" };
 
@@ -176,7 +176,7 @@ export async function handleDat(request, env, params, now = Date.now()) {
 }
 
 export async function handleSubject(request, env, now = Date.now()) {
-  const thread = await getThread(env.DB);
+  const thread = await getThread(env.simple_2ch_db);
   if (!thread) return notFound();
   if (isNotModified(request, thread, now)) return notModifiedResponse(thread);
   const bytes = encodeSjis(`${KEY}.dat<>${thread.title} (${thread.lastNo})\n`);

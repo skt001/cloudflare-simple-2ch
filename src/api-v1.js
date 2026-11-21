@@ -111,7 +111,7 @@ async function readJsonBody(request, h) {
 }
 
 async function listPosts(env, url) {
-  const thread = await getThread(env.DB);
+  const thread = await getThread(env.simple_2ch_db);
   if (!thread) throw new ApiError(404, "NOT_FOUND", MESSAGES.noThread);
 
   const q = url.searchParams;
@@ -131,7 +131,7 @@ async function listPosts(env, url) {
   if (to !== undefined) hi = Math.min(hi, to);
   if (after !== undefined) lo = Math.max(lo, after + 1);
 
-  const rows = lo > hi ? [] : await getPosts(env.DB, lo, hi, limit + 1);
+  const rows = lo > hi ? [] : await getPosts(env.simple_2ch_db, lo, hi, limit + 1);
   const more = rows.length > limit;
   if (more) rows.pop();
   return json({
@@ -157,7 +157,7 @@ export async function handleV1(request, env, url, h) {
     const path = url.pathname.slice("/api/v1".length).replace(/\/+$/, "");
 
     if (method === "GET" && path === "/thread") {
-      const thread = await getThread(env.DB);
+      const thread = await getThread(env.simple_2ch_db);
       if (!thread) return apiError(404, "NOT_FOUND", MESSAGES.noThread);
       return json({ thread: toPublicThread(thread, BBS, KEY) });
     }
@@ -168,7 +168,7 @@ export async function handleV1(request, env, url, h) {
       if (!/^\d{1,15}$/.test(single[1]) || Number(single[1]) < 1) {
         return apiError(400, "INVALID_REQUEST", "レス番号は 1 以上の整数で指定してください。");
       }
-      const row = await getPost(env.DB, Number(single[1]));
+      const row = await getPost(env.simple_2ch_db, Number(single[1]));
       if (!row) return apiError(404, "POST_NOT_FOUND", "指定された番号のレスがありません。");
       return json({ post: toPublicPost(row) });
     }
@@ -184,7 +184,7 @@ export async function handleV1(request, env, url, h) {
         return json({ ok: true, normalized, remaining_posts: remaining });
       }
       const post = await submitPost(env, input, { ...options, source: "api" });
-      const thread = await getThread(env.DB);
+      const thread = await getThread(env.simple_2ch_db);
       return json({ post: toPublicPost(post), thread: toPublicThread(thread, BBS, KEY) }, 201);
     }
 

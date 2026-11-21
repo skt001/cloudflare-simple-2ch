@@ -239,11 +239,11 @@ async function savePost(db, normalized, { posterId, source, now }) {
 export async function submitPost(env, input, { ip, source, now = Date.now() }) {
   const normalized = normalizeInput(input);
   const posterId = await makePosterId(env.ID_SEED, ip, now);
-  return await savePost(env.DB, normalized, { posterId, source, now });
+  return await savePost(env.simple_2ch_db, normalized, { posterId, source, now });
 }
 
 export async function checkPost(env, input, { ip, now = Date.now() }) {
   const normalized = normalizeInput(input);
   const posterId = await makePosterId(env.ID_SEED, ip, now);
-  return await validatePost(env.DB, normalized, { posterId, now });
+  return await validatePost(env.simple_2ch_db, normalized, { posterId, now });
 }

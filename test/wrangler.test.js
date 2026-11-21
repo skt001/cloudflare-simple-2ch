@@ -62,7 +62,7 @@ before(async () => {
     main: path.join(root, "src", "index.js"),
     compatibility_date: compatibilityDate,
     d1_databases: [{
-      binding: "DB",
+      binding: "simple_2ch_db",
       database_name: DB_NAME,
       database_id: "00000000-0000-0000-0000-000000000001",
       migrations_dir: path.join(root, "migrations"),

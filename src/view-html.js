@@ -154,7 +154,7 @@ function formHtml(now) {
 
 export async function handleRead(env, params, now = Date.now()) {
   if (params.bbs !== BBS || params.key !== KEY) return errorPage(MESSAGES.noThread, 404);
-  const thread = await getThread(env.DB);
+  const thread = await getThread(env.simple_2ch_db);
   if (!thread) return errorPage(MESSAGES.noThread, 404);
 
   const lastNo = thread.lastNo;
@@ -162,8 +162,8 @@ export async function handleRead(env, params, now = Date.now()) {
   const { first, last, prependFirst, truncatedAt } = selectRange(lastNo, range);
 
   const rows = [];
-  if (prependFirst) rows.push(...await getPosts(env.DB, 1, 1));
-  rows.push(...await getPosts(env.DB, first, last));
+  if (prependFirst) rows.push(...await getPosts(env.simple_2ch_db, 1, 1));
+  rows.push(...await getPosts(env.simple_2ch_db, first, last));
 
   const full = lastNo >= MAX_POSTS;
   let html =

@@ -57,7 +57,7 @@ export class FakeD1 {
 export const ORIGIN = "https://bbs.example.test";
 
 export function makeEnv(overrides = {}) {
-  return { DB: new FakeD1(), ID_SEED: "test-seed", API_POST_TOKEN: "test-token", ...overrides };
+  return { simple_2ch_db: new FakeD1(), ID_SEED: "test-seed", API_POST_TOKEN: "test-token", ...overrides };
 }
 
 const SAMPLE_DAT = `名無しさん<><>2026/11/18(水) 09:00:01 ID:Ab3dEf9G<> テスト用スレッドです。ダミーデータなので自由に眺めてください。 <>サンプルスレッド
@@ -78,8 +78,8 @@ export function sampleLines() {
 export function seedSample(env) {
   const lines = sampleLines();
   const title = lines[0].split("<>")[4];
-  env.DB.exec(`INSERT INTO thread (id, title, created_at, modified_at) VALUES (1, '${title}', 0, 0)`);
-  const insert = env.DB.sqlite.prepare(
+  env.simple_2ch_db.exec(`INSERT INTO thread (id, title, created_at, modified_at) VALUES (1, '${title}', 0, 0)`);
+  const insert = env.simple_2ch_db.sqlite.prepare(
     "INSERT INTO posts (no, name, mail, date_text, poster_id, message, posted_at, source) VALUES (?, ?, ?, ?, ?, ?, ?, 'web')"
   );
   lines.forEach((line, index) => {
@@ -88,21 +88,21 @@ export function seedSample(env) {
     const message = body.slice(1, -1).replaceAll(" <br> ", "\n").replace(/&#(\d+);/g, (_, n) => String.fromCodePoint(Number(n)));
     insert.run(index + 1, name, mail, date, id, message, 1_700_000_000_000 + index);
   });
-  env.DB.exec("UPDATE thread SET modified_at = 1700000000000 WHERE id = 1");
+  env.simple_2ch_db.exec("UPDATE thread SET modified_at = 1700000000000 WHERE id = 1");
 }
 
 // 1 番だけのスレッド(以降の番号は投稿で作る)
 export function seedMinimal(env, message = "最初のレス") {
-  env.DB.exec("INSERT INTO thread (id, title, created_at, modified_at) VALUES (1, 'テストスレ', 0, 0)");
-  env.DB.sqlite.prepare(
+  env.simple_2ch_db.exec("INSERT INTO thread (id, title, created_at, modified_at) VALUES (1, 'テストスレ', 0, 0)");
+  env.simple_2ch_db.sqlite.prepare(
     "INSERT INTO posts (no, name, mail, date_text, poster_id, message, posted_at, source) VALUES (1, '名無しさん', '', '2026/11/18(水) 09:00:00', 'Seed0001', ?, 0, 'web')"
   ).run(message);
-  env.DB.exec("UPDATE thread SET modified_at = 1700000000000 WHERE id = 1");
+  env.simple_2ch_db.exec("UPDATE thread SET modified_at = 1700000000000 WHERE id = 1");
 }
 
 // 番号 from〜to を埋める(レス数の境界の検証用)
 export function fillPosts(env, from, to) {
-  env.DB.sqlite.prepare(
+  env.simple_2ch_db.sqlite.prepare(
     `WITH RECURSIVE s(n) AS (SELECT ? UNION ALL SELECT n + 1 FROM s WHERE n < ?)
      INSERT INTO posts (no, name, mail, date_text, poster_id, message, posted_at, source)
      SELECT n, '名無しさん', '', '2026/11/18(水) 09:00:00', 'Fill0001', 'x', 0, 'web' FROM s`
@@ -110,7 +110,7 @@ export function fillPosts(env, from, to) {
 }
 
 export function setModified(env, ms) {
-  env.DB.sqlite.prepare("UPDATE thread SET modified_at = ? WHERE id = 1").run(ms);
+  env.simple_2ch_db.sqlite.prepare("UPDATE thread SET modified_at = ? WHERE id = 1").run(ms);
 }
 
 export const readBase = `/test/read.cgi/${BBS}/${KEY}`;
