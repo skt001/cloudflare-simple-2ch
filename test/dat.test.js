@@ -443,6 +443,24 @@ test("subject: HEAD は GET と同じステータス・ヘッダーで本文な�
   assert.equal((await bytesOf(response)).length, 0);
 });
 
+// ---------- SETTING.TXT ----------
+
+const SETTING_PATH = "/simple/SETTING.TXT";
+
+test("setting: 板設定(BBS_TITLE と BBS_NONAME_NAME)を Shift_JIS で返す", async () => {
+  const env = makeEnv();
+  const response = await call(env, SETTING_PATH);
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Content-Type"), "text/plain; charset=Shift_JIS");
+  assert.equal(decodeSjis(await bytesOf(response)), "BBS_TITLE=シンプル板\nBBS_NONAME_NAME=名無しさん\n");
+});
+
+test("setting: スレッドがなくても返し、板が違うときは 404", async () => {
+  const env = makeEnv();
+  assert.equal((await call(env, SETTING_PATH)).status, 200);
+  assert.equal((await call(env, "/other/SETTING.TXT")).status, 404);
+});
+
 // ---------- dat_lines ----------
 
 function lineCount(env) {

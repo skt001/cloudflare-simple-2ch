@@ -9,7 +9,7 @@
 - 扱うスレッドは 1 つだけです。スレッド作成の機能はなく、初期スレッドは運用 SQL で作成します（[ADMIN.md](./ADMIN.md) の「初期スレッドの作成」）
 - 3 種類のインターフェースが、同じ D1 の投稿データを参照します
   - **HTML**（UTF-8）：通常ブラウザ向け。`read.cgi` 形式の URL でスレッド閲覧と投稿ができます。範囲指定や最新 50 件などの表示形式に対応します
-  - **dat / raw / subject.txt**（Shift_JIS）：専用ブラウザ向け。`/<板名>/dat/<キー>.dat` の直接取得と、`read.cgi` 経由の raw 取得に対応します。スレッド一覧の subject.txt は `/<板名>/subject.txt` で、スレッドが存在する場合のみ1行で返します（存在しない場合は他のインターフェースと同じく 404 です）
+  - **dat / raw / subject.txt / SETTING.TXT**（Shift_JIS）：専用ブラウザ向け。`/<板名>/dat/<キー>.dat` の直接取得と、`read.cgi` 経由の raw 取得に対応します。スレッド一覧の subject.txt は `/<板名>/subject.txt` で、スレッドが存在する場合のみ1行で返します（存在しない場合は他のインターフェースと同じく 404 です）。板設定の SETTING.TXT は `/<板名>/SETTING.TXT` で、BBS_TITLE と BBS_NONAME_NAME のみを返します
   - **JSON API**（UTF-8）：`/api/v1`。読み取り・投稿とも認証なしです
 - 板名は `simple`、スレッドのキーは固定値です（`src/config.js`）。URL は `/test/read.cgi/simple/1795000000/` の形になります
 - 投稿は `bbs.cgi` 互換のフォームから行います。名前を省略すると「名無しさん」になります

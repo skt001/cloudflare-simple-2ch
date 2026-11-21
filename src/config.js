@@ -1,5 +1,6 @@
 export const BBS = "simple";
 export const KEY = "1795000000";
+export const BOARD_TITLE = "シンプル板";
 
 export const DEFAULT_NAME = "名無しさん";
 export const MAX_POSTS = 5000;

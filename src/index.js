@@ -1,6 +1,6 @@
 import { BBS, KEY, MAX_PATH } from "./config.js";
 import { handleV1 } from "./api-v1.js";
-import { handleDat, handleRaw, handleSubject } from "./view-dat.js";
+import { handleDat, handleRaw, handleSetting, handleSubject } from "./view-dat.js";
 import { handlePost, handleRead } from "./view-html.js";
 
 const READ_BASE = `/test/read.cgi/${BBS}/${KEY}/l50`;
@@ -75,6 +75,8 @@ async function route(request, env, url) {
   }
 
   if (path === `/${BBS}/subject.txt`) return await handleSubject(request, env);
+
+  if (path === `/${BBS}/SETTING.TXT`) return handleSetting();
 
   const dat = /^\/([^/]+)\/dat\/([^/]+)\.dat$/.exec(path);
   if (dat) return await handleDat(request, env, { bbs: dat[1], key: dat[2] });

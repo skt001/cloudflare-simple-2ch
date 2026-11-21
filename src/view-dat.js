@@ -1,4 +1,4 @@
-import { BBS, FRESH_UPDATE_MS, KEY, RAW_MAX_KB } from "./config.js";
+import { BBS, BOARD_TITLE, DEFAULT_NAME, FRESH_UPDATE_MS, KEY, RAW_MAX_KB } from "./config.js";
 import { MESSAGES, getThread } from "./core.js";
 import { concatBytes, encodeSjis } from "./sjis.js";
 
@@ -181,6 +181,14 @@ export async function handleSubject(request, env, now = Date.now()) {
   if (isNotModified(request, thread, now)) return notModifiedResponse(thread);
   const bytes = encodeSjis(`${KEY}.dat<>${thread.title} (${thread.lastNo})\n`);
   return bodyResponse(bytes, thread);
+}
+
+export function handleSetting() {
+  const bytes = encodeSjis(`BBS_TITLE=${BOARD_TITLE}\nBBS_NONAME_NAME=${DEFAULT_NAME}\n`);
+  return new Response(bytes, {
+    status: 200,
+    headers: { "Content-Type": SJIS_TYPE, "Cache-Control": "no-store" },
+  });
 }
 
 function notFound() {
