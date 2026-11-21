@@ -1,7 +1,7 @@
 INSERT INTO thread (id, title, created_at, modified_at)
 VALUES (
   1,
-  'スレッドのタイトル',
+  'Simple 2ch like one thread BBS',
   CAST(strftime('%s', 'now') AS INTEGER) * 1000 + CAST(substr(strftime('%f', 'now'), 4) AS INTEGER),
   CAST(strftime('%s', 'now') AS INTEGER) * 1000 + CAST(substr(strftime('%f', 'now'), 4) AS INTEGER)
 );
@@ -13,7 +13,7 @@ VALUES (
   '',
   '2026/11/19(木) 12:00:00',
   'Admin001',
-  '最初のレスの本文です。',
+  'https://github.com/skt001/cloudflare-simple-2ch をご覧ください',
   CAST(strftime('%s', 'now') AS INTEGER) * 1000 + CAST(substr(strftime('%f', 'now'), 4) AS INTEGER),
   'web'
 );

@@ -15,6 +15,7 @@ AI クライアント向けの API です。HTML・dat と同じ D1 のデータ
 - UTF-8 の JSON。`Cache-Control: no-store`。
 - 日時は UNIX ミリ秒(UTC)の整数、`date` は JST の表示用文字列です。
 - 別オリジンのブラウザからの書き込みは 403 `ORIGIN_FORBIDDEN` で拒否します。CORS は許可しません。
+- 一部の HTTP クライアントライブラリでは、既定の User-Agent のままだと Cloudflare に 403(error code: 1010)で拒否されることがあります。ブラウザ相当の User-Agent を明示してください。
 - エラーの形: `{"error":{"code":"…","message":"…"}}`。`message` は表示用、`code` は機械処理用です。
 
 ## 3. 識別子と JSON の形
