@@ -57,7 +57,7 @@ export class FakeD1 {
 export const ORIGIN = "https://bbs.example.test";
 
 export function makeEnv(overrides = {}) {
-  return { simple_2ch_db: new FakeD1(), ID_SEED: "test-seed", API_POST_TOKEN: "test-token", ...overrides };
+  return { simple_2ch_db: new FakeD1(), ID_SEED: "test-seed", ...overrides };
 }
 
 const SAMPLE_DAT = `名無しさん<><>2026/11/18(水) 09:00:01 ID:Ab3dEf9G<> テスト用スレッドです。ダミーデータなので自由に眺めてください。 <>サンプルスレッド
@@ -142,9 +142,8 @@ export async function postForm(env, fields, headers = {}) {
   });
 }
 
-export async function apiCall(env, path, { method = "GET", token = "test-token", body, headers = {} } = {}) {
+export async function apiCall(env, path, { method = "GET", body, headers = {} } = {}) {
   const init = { method, headers: { ...headers } };
-  if (token !== null) init.headers.Authorization = `Bearer ${token}`;
   if (body !== undefined) {
     init.headers["Content-Type"] = "application/json";
     init.body = typeof body === "string" ? body : JSON.stringify(body);

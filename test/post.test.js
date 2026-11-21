@@ -1,6 +1,8 @@
 import assert from "node:assert/strict";
 import test, { afterEach, mock } from "node:test";
+import { BBS, KEY } from "../src/config.js";
 import { PostError, formatJst, makePosterId, normalizeInput, unescapeText } from "../src/core.js";
+import { encodeSjis } from "../src/sjis.js";
 import { call, fillPosts, form, makeEnv, postForm, readBase, seedMinimal } from "./helpers.js";
 
 afterEach(() => mock.restoreAll());
@@ -316,4 +318,31 @@ test("投稿した内容は HTML・dat・raw に同じ内容で出る(エスケ�
   const dat = new TextDecoder("shift_jis").decode(new Uint8Array(await (await call(env, "/simple/dat/1795000000.dat")).arrayBuffer()));
   assert.ok(dat.includes("&lt;太郎&gt;<><>"));
   assert.ok(dat.includes("<> a &lt; b &amp; c <br> &#128512; &gt;&gt;1 <>\n"));
+});
+
+// ---------- Shift_JIS のフォーム投稿 ----------
+
+function sjisFormBody(fields) {
+  const encode = (text) => [...encodeSjis(text)].map((byte) => {
+    const ch = String.fromCharCode(byte);
+    return /[A-Za-z0-9\-._~]/.test(ch) ? ch : "%" + byte.toString(16).toUpperCase().padStart(2, "0");
+  }).join("");
+  return Object.entries(fields).map(([name, value]) => `${encode(name)}=${encode(value)}`).join("&");
+}
+
+test("投稿: Shift_JIS のフォーム(専用ブラウザ)でも文字化けせず保存される", async () => {
+  const env = newEnv();
+  const response = await call(env, "/test/bbs.cgi", {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded", ...freshIp() },
+    body: sjisFormBody({
+      bbs: BBS, key: KEY, time: String(Math.floor(Date.now() / 1000) - 30), submit: "書き込む",
+      FROM: "専用ブラウザ", mail: "sage", MESSAGE: "専用ブラウザからの書き込み\n2行目です",
+    }),
+  });
+  assert.equal(response.status, 303);
+  const saved = row(env, 2);
+  assert.equal(unescapeText(saved.name), "専用ブラウザ");
+  assert.equal(unescapeText(saved.mail), "sage");
+  assert.equal(unescapeText(saved.message), "専用ブラウザからの書き込み\n2行目です");
 });

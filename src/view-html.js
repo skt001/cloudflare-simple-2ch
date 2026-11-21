@@ -4,6 +4,7 @@ import {
 import {
   MESSAGES, PostError, escapeHtmlAttribute, getPosts, getThread, submitPost,
 } from "./core.js";
+import { decodeSjis } from "./sjis.js";
 
 const BASE = `/test/read.cgi/${BBS}/${KEY}/`;
 const BODY_TAG = "<body bgcolor=#efefef text=black link=blue alink=red vlink=#660099>";
@@ -194,6 +195,56 @@ function sameHost(origin, url) {
   }
 }
 
+const strictUtf8 = new TextDecoder("utf-8", { fatal: true });
+
+function decodeField(bytes) {
+  try {
+    return strictUtf8.decode(bytes);
+  } catch {
+    return decodeSjis(bytes);
+  }
+}
+
+function unescapeField(raw) {
+  const out = [];
+  for (let i = 0; i < raw.length; i++) {
+    const byte = raw[i];
+    if (byte === 0x2b) { // '+'
+      out.push(0x20);
+    } else if (byte === 0x25 && i + 2 < raw.length) { // '%'
+      const hex = String.fromCharCode(raw[i + 1], raw[i + 2]);
+      if (/^[0-9a-fA-F]{2}$/.test(hex)) {
+        out.push(Number.parseInt(hex, 16));
+        i += 2;
+      } else {
+        out.push(byte);
+      }
+    } else {
+      out.push(byte);
+    }
+  }
+  return new Uint8Array(out);
+}
+
+// フォームのバイト列を名前・値ともバイト列のまま取り出し、各値を
+// UTF-8 として厳密に読めなければ Shift_JIS として読む(専用ブラウザ対策)。
+function parseForm(bytes) {
+  const fields = new Map();
+  let start = 0;
+  for (let i = 0; i <= bytes.length; i++) {
+    if (i < bytes.length && bytes[i] !== 0x26) continue; // '&'
+    const pair = bytes.subarray(start, i);
+    start = i + 1;
+    if (pair.length === 0) continue;
+    const eq = pair.indexOf(0x3d); // '='
+    const name = decodeField(unescapeField(eq < 0 ? pair : pair.subarray(0, eq)));
+    if (fields.has(name)) continue;
+    const value = eq < 0 ? new Uint8Array(0) : pair.subarray(eq + 1);
+    fields.set(name, decodeField(unescapeField(value)));
+  }
+  return fields;
+}
+
 export async function handlePost(request, env, url, h, now = Date.now()) {
   const origin = request.headers.get("Origin");
   if (origin !== null && !sameHost(origin, url)) return errorPage("不正なリクエストです", 403);
@@ -207,7 +258,7 @@ export async function handlePost(request, env, url, h, now = Date.now()) {
   }
   const type = (request.headers.get("Content-Type") ?? "").split(";")[0].trim().toLowerCase();
   if (type !== "application/x-www-form-urlencoded") return errorPage("フォーム情報が不正です", 400);
-  const form = new URLSearchParams(new TextDecoder().decode(bytes));
+  const form = parseForm(bytes);
 
   const bbs = (form.get("bbs") ?? "").replace(/[^A-Za-z0-9]/g, "");
   const key = (form.get("key") ?? "").replace(/\D/g, "");

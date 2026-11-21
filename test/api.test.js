@@ -165,30 +165,15 @@ test("スレッドがないときは 404 NOT_FOUND。未知のパスも 404", as
   assertError(await json(unknown), "NOT_FOUND");
 });
 
-// ---------- 認証 ----------
+// ---------- 認証なし ----------
 
-test("投稿系は Bearer トークンが必要: なし・不一致は 401 UNAUTHORIZED", async () => {
+test("投稿系は認証なしで使える(トークン不要)", async () => {
   const env = sampleEnv();
-  for (const path of ["/posts", "/posts/validate"]) {
-    for (const token of [null, "wrong", ""]) {
-      const response = await apiCall(env, path, { method: "POST", token, body: { message: "a" } });
-      assert.equal(response.status, 401, `${path} token=${token}`);
-      assertError(await json(response), "UNAUTHORIZED");
-    }
-    const basic = await apiCall(env, path, { method: "POST", token: null, body: { message: "a" }, headers: { Authorization: "Basic dGVzdC10b2tlbg==" } });
-    assert.equal(basic.status, 401);
-  }
-  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 10);
-});
-
-test("API_POST_TOKEN が未設定なら、投稿系は 503 API_DISABLED(読み取りは使える)", async () => {
-  const env = sampleEnv({ API_POST_TOKEN: undefined });
-  for (const path of ["/posts", "/posts/validate"]) {
-    const response = await apiCall(env, path, { method: "POST", token: "anything", body: { message: "a" } });
-    assert.equal(response.status, 503);
-    assertError(await json(response), "API_DISABLED");
-  }
-  assert.equal((await apiCall(env, "/thread", { token: null })).status, 200);
+  const validate = await apiCall(env, "/posts/validate", { method: "POST", headers: ip(), body: { message: "a" } });
+  assert.equal(validate.status, 200);
+  const posted = await apiCall(env, "/posts", { method: "POST", headers: ip(), body: { message: "a" } });
+  assert.equal(posted.status, 201);
+  assert.equal(env.simple_2ch_db.sqlite.prepare("SELECT COUNT(*) AS n FROM posts").get().n, 11);
 });
 
 // ---------- 投稿前検証・投稿 ----------
@@ -273,7 +258,7 @@ test("POST /posts: JSON が不正・型が違う・Content-Type が違うとき�
     assertError(await json(response), "INVALID_REQUEST");
   }
   const text = await worker.fetch(new Request(`${ORIGIN}/api/v1/posts`, {
-    method: "POST", headers: { Authorization: "Bearer test-token", "Content-Type": "text/plain" }, body: "{}",
+    method: "POST", headers: { "Content-Type": "text/plain" }, body: "{}",
   }), env);
   assert.equal(text.status, 400);
 });

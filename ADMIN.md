@@ -23,14 +23,12 @@ cp wrangler.example.jsonc wrangler.jsonc          # wrangler.jsonc は .gitignor
 npx wrangler d1 create simple-2ch-db              # 出力された database_id を wrangler.jsonc に書く
 npm run db:apply:remote                           # migrations を適用する(開発用は db:apply:local)
 npx wrangler secret put ID_SEED                   # ID の種。長いランダムな文字列
-npx wrangler secret put API_POST_TOKEN            # JSON API の投稿用トークン(API を使うときだけ)
 npm run deploy
 ```
 
-- 開発用の secret は `.dev.vars`(`.gitignore` 済み)に `ID_SEED=...`、`API_POST_TOKEN=...` と書きます。
+- 開発用の secret は `.dev.vars`(`.gitignore` 済み)に `ID_SEED=...` と書きます。
 - `ID_SEED` が未設定だと、投稿(HTML・JSON)は 500 で拒否されます。閲覧は使えます。
 - `ID_SEED` を変えると、以降の投稿の ID が変わります。過去の投稿は保存済みの文字列のままです。
-- `API_POST_TOKEN` が未設定だと、JSON API の投稿系は 503 `API_DISABLED` になります。読み取りは使えます。
 - bbs・key・レス数の上限(`MAX_POSTS`)などの定数は `src/config.js` にあります。変更したら再デプロイします。key を変えると URL が変わるため、専用ブラウザの登録は別のスレッドとして扱われます。
 
 ## 3. 初期スレッドの作成

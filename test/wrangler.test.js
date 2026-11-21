@@ -84,7 +84,7 @@ before(async () => {
   const port = await freePort();
   server = spawn(wrangler, [
     "dev", "--config", config, "--persist-to", state, "--ip", "127.0.0.1", "--port", String(port),
-    "--var", "ID_SEED:integration-seed", "--var", "API_POST_TOKEN:integration-token",
+    "--var", "ID_SEED:integration-seed",
   ], { cwd: root, env: environment(), detached: true });
   baseUrl = `http://127.0.0.1:${port}`;
   await new Promise((resolve, reject) => {
@@ -217,12 +217,10 @@ test("実際の D1 で: あぼーん(UPDATE)で最終更新が進み、全件取
 });
 
 // 連続投稿規制の状態(同じ ID)を使い切る前に実行する
-test("実際のランタイムで: JSON API(認証・検証)", async (t) => {
+test("実際のランタイムで: JSON API(検証)", async (t) => {
   if (skip) return t.skip(skip);
-  const unauthorized = await get("/api/v1/posts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ message: "a" }) });
-  assert.equal(unauthorized.status, 401);
   const validate = await get("/api/v1/posts/validate", {
-    method: "POST", headers: { Authorization: "Bearer integration-token", "Content-Type": "application/json" },
+    method: "POST", headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name: "AI#t", message: " 検証 " }),
   });
   assert.equal(validate.status, 200);

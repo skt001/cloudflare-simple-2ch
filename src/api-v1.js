@@ -53,29 +53,6 @@ function integerParam(query, name, min) {
   return Number(value);
 }
 
-async function digest(text) {
-  return new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text)));
-}
-
-async function tokenMatches(expected, given) {
-  const a = await digest(expected);
-  const b = await digest(given);
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a[i] ^ b[i];
-  return diff === 0;
-}
-
-async function authorize(request, env) {
-  if (!env.API_POST_TOKEN) {
-    return apiError(503, "API_DISABLED", "投稿用の API は有効になっていません。");
-  }
-  const match = /^Bearer\s+(.+)$/i.exec(request.headers.get("Authorization") ?? "");
-  if (!match || !(await tokenMatches(env.API_POST_TOKEN, match[1].trim()))) {
-    return apiError(401, "UNAUTHORIZED", "認証に失敗しました。");
-  }
-  return null;
-}
-
 async function readJsonBody(request, h) {
   let bytes;
   try {
@@ -174,8 +151,6 @@ export async function handleV1(request, env, url, h) {
     }
 
     if (method === "POST" && (path === "/posts" || path === "/posts/validate")) {
-      const denied = await authorize(request, env);
-      if (denied) return denied;
       const input = await readJsonBody(request, h);
       const options = { ip: h.clientIp(request) };
 

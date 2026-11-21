@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { SJIS_TABLE } from "../src/sjis-table.js";
-import { encodeSjis } from "../src/sjis.js";
+import { decodeSjis, encodeSjis } from "../src/sjis.js";
 
 const decoder = new TextDecoder("shift_jis");
 
@@ -91,4 +91,10 @@ test("長い文字列でも欠けずに変換できる", () => {
   const text = "あ😀".repeat(5000);
   const bytes = encodeSjis(text);
   assert.equal(bytes.length, 5000 * (2 + "&#128512;".length));
+});
+
+test("decodeSjis: encodeSjis と往復できる", () => {
+  for (const text of ["専用ブラウザからの書き込み", "半角ｶﾀｶﾅと全角カタカナ", "ABCabc123 !~", "あぼーん"]) {
+    assert.equal(decodeSjis(encodeSjis(text)), text);
+  }
 });

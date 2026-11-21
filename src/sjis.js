@@ -39,3 +39,39 @@ export function concatBytes(parts) {
   }
   return out;
 }
+
+let decodeTable = null;
+
+function buildDecodeTable() {
+  const table = new Map();
+  const entries = Object.entries(SJIS_TABLE)
+    .map(([codePoint, code]) => [Number(codePoint), code])
+    .sort((a, b) => a[0] - b[0]);
+  for (const [codePoint, code] of entries) {
+    if (!table.has(code)) table.set(code, codePoint);
+  }
+  return table;
+}
+
+export function decodeSjis(bytes) {
+  if (!decodeTable) decodeTable = buildDecodeTable();
+  let out = "";
+  for (let i = 0; i < bytes.length; i++) {
+    const byte = bytes[i];
+    const isLead = (byte >= 0x81 && byte <= 0x9f) || (byte >= 0xe0 && byte <= 0xfc);
+    if (!isLead) {
+      out += String.fromCodePoint(decodeTable.get(byte) ?? 0xfffd);
+      continue;
+    }
+    const trail = bytes[i + 1];
+    const isTrail = trail !== undefined &&
+      ((trail >= 0x40 && trail <= 0x7e) || (trail >= 0x80 && trail <= 0xfc));
+    if (!isTrail) {
+      out += "\ufffd";
+      continue;
+    }
+    out += String.fromCodePoint(decodeTable.get((byte << 8) | trail) ?? 0xfffd);
+    i++;
+  }
+  return out;
+}

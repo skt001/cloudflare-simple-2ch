@@ -50,7 +50,6 @@ npx wrangler d1 create simple-2ch-db
 ```sh
 npm run db:apply:remote
 npx wrangler secret put ID_SEED          # ID の種。長いランダムな文字列
-npx wrangler secret put API_POST_TOKEN   # JSON API の投稿用トークン（API を使うときだけ）
 npx wrangler deploy
 ```
 
@@ -60,7 +59,6 @@ Worker 名は `simple-2ch` で、デプロイ後の URL は `https://simple-2ch.
 
 - `ID_SEED` が未設定だと、投稿（HTML・JSON）は 500 で拒否されます。閲覧は使えます
 - `ID_SEED` を変えると、以降の投稿の ID が変わります。過去の投稿の ID は保存済みの文字列のままです
-- `API_POST_TOKEN` が未設定だと、JSON API の投稿系は 503 `API_DISABLED` になります。読み取りは使えます
 - レス数の上限などの定数は `src/config.js` にあります。変更したら再デプロイします。スレッドのキーを変えると URL が変わり、専用ブラウザでは別のスレッドとして扱われます
 
 ## 運用
